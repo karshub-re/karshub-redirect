@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Open in app</title>
+  <script>
+    (function () {
+      // Compute repo base (supports both user site and project site)
+      var segs = location.pathname.split('/').filter(Boolean);
+      var base = segs.length > 0 ? ('/' + segs[0] + '/') : '/';
+      var fallback = base + 'busquedaRapida/'; // e.g., /karshub-link/busquedaRapida/
+
+      // Support /v/123 or ?id=123
+      var id = (segs[0] === 'v' && segs[1]) || new URLSearchParams(location.search).get('id');
+      var target = id ? ('karshub://v/' + encodeURIComponent(id)) : 'karshub://busquedaRapida';
+
+      var fired = false;
+      var timer = setTimeout(function () {
+        if (!fired) location.replace(fallback);
+      }, 1200);
+
+      function cancel() {
+        if (!fired) {
+          fired = True;
+          clearTimeout(timer);
+        }
+      }
+
+      // If the browser loses visibility (likely app opened), cancel fallback
+      window.addEventListener('pagehide', cancel);
+      window.addEventListener('blur', cancel);
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') cancel();
+      });
+
+      // Attempt to open the app
+      location.href = target;
+    })();
+  </script>
+</head>
+<body></body>
+</html>
