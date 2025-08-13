@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Open in app</title>
+  <script>
+    // Soporta /v/123 o ?id=123
+    (function () {
+      const p = location.pathname.split('/').filter(Boolean);
+      const id = (p[0] === 'v' && p[1]) || new URLSearchParams(location.search).get('id');
+      const target = id ? `karshub://v/${encodeURIComponent(id)}` : `karshub://`;
+      // Dispara la apertura de la app
+      location.href = target;
+    })();
+  </script>
+</head>
+<body></body>
+</html>
