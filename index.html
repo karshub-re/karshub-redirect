@@ -41,4 +41,26 @@
 
       // Intent extra para Chrome Android
       var tIntent = setTimeout(function(){
-        if (!cancelled &&
+        if (!cancelled && isAndroid && id) {
+          var intent = 'intent://' + HOST + '/v/' + encodeURIComponent(id)
+                     + '#Intent;scheme=karshub;package=' + ANDROID_PKG + ';end';
+          location.href = intent;
+        }
+      }, 300);
+
+      // Fallback a tienda
+      var tStore = setTimeout(function(){
+        if (cancelled) return;
+        if (isAndroid) {
+          location.replace('https://play.google.com/store/apps/details?id=' + ANDROID_PKG);
+        } else if (isIOS) {
+          location.replace('https://apps.apple.com/app/id' + IOS_APP_ID);
+        } else {
+          // Desktop/otros: sin texto ni redirección (queda en blanco)
+        }
+      }, 1600);
+    })();
+  </script>
+</head>
+<body></body>
+</html>
