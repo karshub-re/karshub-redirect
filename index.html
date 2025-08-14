@@ -21,14 +21,19 @@
 
   <script>
     (function () {
-      // 🔧 NOMBRE DEL REPO EN GITHUB PAGES:
-      var BASE = "/karshub-redirect/";          // <-- cámbialo si tu repo tiene otro nombre
-      var FALLBACK = BASE + "busquedaRapida/";  // fallback dentro del mismo repo
+      // 🔧 Ajusta esto a tu repo y a tu app
+      var BASE = "/karshub-redirect/";              // si cambias el nombre del repo, cámbialo aquí
+      var FALLBACK_WEB = BASE + "busquedaRapida/";  // fallback web para desktop
+      var HOST = "karshub.com";                     // tu AndroidManifest exige este host
+      var ANDROID_PKG = "com.karshub.karshub";           // <-- PON AQUÍ tu applicationId de Android (ej: com.karshub.app)
+      var IOS_APP_ID  = "6740700578";               // <-- PON AQUÍ tu App Store ID numérico
 
-      // 👇 Host requerido por tu manifest:
-      var HOST = "karshub.com";
+      // Detección simple de plataforma
+      var ua = navigator.userAgent || "";
+      var isAndroid = /Android/i.test(ua);
+      var isIOS = /iPhone|iPad|iPod/i.test(ua);
 
-      // Quita el prefijo BASE de la ruta para obtener la parte interna
+      // Quitar el prefijo BASE de la ruta para obtener /v/:id
       var path = location.pathname;
       if (path.startsWith(BASE)) path = path.slice(BASE.length);
       var segs = path.split('/').filter(Boolean);
@@ -36,7 +41,7 @@
       // Soporta /v/ID o ?id=ID
       var id = (segs[0] === 'v' && segs[1]) || new URLSearchParams(location.search).get('id');
 
-      // Deep link objetivo: ¡incluye el host!
+      // Deep link con host (Android lo exige; iOS igual funciona)
       var target = id
         ? ('karshub://' + HOST + '/v/' + encodeURIComponent(id))
         : ('karshub://' + HOST + '/busquedaRapida');
@@ -46,18 +51,35 @@
       // Intento automático
       setTimeout(openApp, 0);
 
-      // Cancela fallback si la app abre (la página pierde foco/visibilidad)
+      // Si la app abre, la página pierde foco/visibilidad → cancelamos fallback
       var fired = false;
-      function cancel() { if (!fired) { fired = true; clearTimeout(timer); } }
+      function cancel(){ if(!fired){ fired = true; clearTimeout(timer); clearTimeout(intentTimer); } }
       window.addEventListener('pagehide', cancel);
       window.addEventListener('blur', cancel);
       document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'hidden') cancel();
       });
 
-      // Fallback tras ~1.6s si no abrió la app
+      // (Opcional) Segundo intento en Android con "intent://" (ayuda en Chrome)
+      var intentTimer = setTimeout(function(){
+        if (!fired && isAndroid && id) {
+          var intent = 'intent://karshub.com/v/' + encodeURIComponent(id) +
+                       '#Intent;scheme=karshub;package=' + ANDROID_PKG + ';end';
+          location.href = intent;
+        }
+      }, 350);
+
+      // Fallback a tienda tras ~1.6s si no abrió la app
       var timer = setTimeout(function () {
-        if (!fired) location.replace(FALLBACK);
+        if (fired) return;
+        if (isAndroid) {
+          location.replace('https://play.google.com/store/apps/details?id=' + ANDROID_PKG);
+        } else if (isIOS) {
+          location.replace('https://apps.apple.com/app/id' + IOS_APP_ID);
+        } else {
+          // Desktop u otros → tu página de búsqueda rápida
+          location.replace(FALLBACK_WEB);
+        }
       }, 1600);
 
       // Botón manual (algunos navegadores exigen gesto del usuario)
