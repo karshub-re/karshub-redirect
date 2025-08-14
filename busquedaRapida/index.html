@@ -1,16 +1,23 @@
 <!doctype html>
-<html>
+<html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>Búsqueda Rápida</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin:0; padding:24px; }
+    .box { max-width: 640px; margin: 0 auto; }
+  </style>
   <script>
-    (function () {
-      // Optionally try to open the in-app route too
-      try { location.href = 'karshub://busquedaRapida'; } catch (e) {}
-    })();
+    // También intenta abrir la sección de búsqueda dentro de la app (con host)
+    try { location.href = 'karshub://karshub.com/busquedaRapida'; } catch (e) {}
   </script>
 </head>
-<body></body>
+<body>
+  <div class="box">
+    <h1>Búsqueda Rápida</h1>
+    <p>Si tienes la app instalada, se abrirá automáticamente. Si no, abre KarsHub y usa <strong>Búsqueda Rápida</strong>.</p>
+  </div>
+</body>
 </html>
