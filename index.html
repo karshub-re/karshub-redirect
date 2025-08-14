@@ -4,91 +4,41 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>Abrir en KarsHub</title>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin:0; padding:24px; }
-    .box { max-width: 640px; margin: 0 auto; }
-    .btn { display:inline-block; padding:12px 16px; border:1px solid #ddd; border-radius:10px; text-decoration:none; }
-    .hint { color:#666; font-size: 14px; }
-  </style>
-</head>
-<body>
-  <div class="box">
-    <h1>Abriendo KarsHub…</h1>
-    <p class="hint">Si no se abre automáticamente, pulsa el botón:</p>
-    <p><a id="open" class="btn" href="#">Abrir en la app</a></p>
-  </div>
-
+  <title></title>
   <script>
     (function () {
-      // 🔧 Ajusta esto a tu repo y a tu app
-      var BASE = "/karshub-redirect/";              // si cambias el nombre del repo, cámbialo aquí
-      var FALLBACK_WEB = BASE + "busquedaRapida/";  // fallback web para desktop
-      var HOST = "karshub.com";                     // tu AndroidManifest exige este host
-      var ANDROID_PKG = "com.karshub.karshub";           // <-- PON AQUÍ tu applicationId de Android (ej: com.karshub.app)
-      var IOS_APP_ID  = "6740700578";               // <-- PON AQUÍ tu App Store ID numérico
+      // AJUSTES
+      var BASE = "/karshub-redirect/";     // cambia si tu repo tiene otro nombre
+      var HOST = "karshub.com";            // coincide con android:host en tu manifest
+      var ANDROID_PKG = "com.karshub.karshub";  // <-- tu package de Android
+      var IOS_APP_ID  = "6740700578";      // <-- tu App Store ID numérico
 
-      // Detección simple de plataforma
+      // Plataforma
       var ua = navigator.userAgent || "";
       var isAndroid = /Android/i.test(ua);
       var isIOS = /iPhone|iPad|iPod/i.test(ua);
 
-      // Quitar el prefijo BASE de la ruta para obtener /v/:id
+      // Ruta interna (/v/:id o ?id=)
       var path = location.pathname;
       if (path.startsWith(BASE)) path = path.slice(BASE.length);
       var segs = path.split('/').filter(Boolean);
-
-      // Soporta /v/ID o ?id=ID
       var id = (segs[0] === 'v' && segs[1]) || new URLSearchParams(location.search).get('id');
 
-      // Deep link con host (Android lo exige; iOS igual funciona)
+      // Deep link con host (requerido por Android)
       var target = id
         ? ('karshub://' + HOST + '/v/' + encodeURIComponent(id))
-        : ('karshub://' + HOST + '/busquedaRapida');
+        : ('karshub://' + HOST + '/');
 
-      function openApp() { location.href = target; }
-
-      // Intento automático
-      setTimeout(openApp, 0);
-
-      // Si la app abre, la página pierde foco/visibilidad → cancelamos fallback
-      var fired = false;
-      function cancel(){ if(!fired){ fired = true; clearTimeout(timer); clearTimeout(intentTimer); } }
+      // Cancelación de fallback si la app abre (la página pierde foco/visibilidad)
+      var cancelled = false;
+      function cancel(){ if(!cancelled){ cancelled = true; clearTimeout(tIntent); clearTimeout(tStore); } }
       window.addEventListener('pagehide', cancel);
       window.addEventListener('blur', cancel);
-      document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'hidden') cancel();
-      });
+      document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') cancel(); });
 
-      // (Opcional) Segundo intento en Android con "intent://" (ayuda en Chrome)
-      var intentTimer = setTimeout(function(){
-        if (!fired && isAndroid && id) {
-          var intent = 'intent://karshub.com/v/' + encodeURIComponent(id) +
-                       '#Intent;scheme=karshub;package=' + ANDROID_PKG + ';end';
-          location.href = intent;
-        }
-      }, 350);
+      // Abrir app (intento principal)
+      setTimeout(function(){ location.href = target; }, 0);
 
-      // Fallback a tienda tras ~1.6s si no abrió la app
-      var timer = setTimeout(function () {
-        if (fired) return;
-        if (isAndroid) {
-          location.replace('https://play.google.com/store/apps/details?id=' + ANDROID_PKG);
-        } else if (isIOS) {
-          location.replace('https://apps.apple.com/app/id' + IOS_APP_ID);
-        } else {
-          // Desktop u otros → tu página de búsqueda rápida
-          location.replace(FALLBACK_WEB);
-        }
-      }, 1600);
-
-      // Botón manual (algunos navegadores exigen gesto del usuario)
-      document.getElementById('open').addEventListener('click', function (e) {
-        e.preventDefault();
-        openApp();
-      });
-    })();
-  </script>
-  <noscript>Activa JavaScript para abrir la app.</noscript>
-</body>
-</html>
+      // Intent extra para Chrome Android
+      var tIntent = setTimeout(function(){
+        if (!cancelled &&
