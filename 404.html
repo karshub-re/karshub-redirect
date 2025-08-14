@@ -21,9 +21,15 @@
 
   <script>
     (function () {
-      var BASE = "/karshub-redirect/";          // <-- cámbialo si tu repo tiene otro nombre
-      var FALLBACK = BASE + "busquedaRapida/";
+      var BASE = "/karshub-redirect/";
+      var FALLBACK_WEB = BASE + "busquedaRapida/";
       var HOST = "karshub.com";
+      var ANDROID_PKG = "com.karshub.karshub";   // <-- cámbialo
+      var IOS_APP_ID  = "6740700578";       // <-- cámbialo
+
+      var ua = navigator.userAgent || "";
+      var isAndroid = /Android/i.test(ua);
+      var isIOS = /iPhone|iPad|iPod/i.test(ua);
 
       var path = location.pathname;
       if (path.startsWith(BASE)) path = path.slice(BASE.length);
@@ -38,15 +44,30 @@
       setTimeout(openApp, 0);
 
       var fired = false;
-      function cancel() { if (!fired) { fired = true; clearTimeout(timer); } }
+      function cancel(){ if(!fired){ fired = true; clearTimeout(timer); clearTimeout(intentTimer); } }
       window.addEventListener('pagehide', cancel);
       window.addEventListener('blur', cancel);
       document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'hidden') cancel();
       });
 
+      var intentTimer = setTimeout(function(){
+        if (!fired && isAndroid && id) {
+          var intent = 'intent://karshub.com/v/' + encodeURIComponent(id) +
+                       '#Intent;scheme=karshub;package=' + ANDROID_PKG + ';end';
+          location.href = intent;
+        }
+      }, 350);
+
       var timer = setTimeout(function () {
-        if (!fired) location.replace(FALLBACK);
+        if (fired) return;
+        if (isAndroid) {
+          location.replace('https://play.google.com/store/apps/details?id=' + ANDROID_PKG);
+        } else if (isIOS) {
+          location.replace('https://apps.apple.com/app/id' + IOS_APP_ID);
+        } else {
+          location.replace(FALLBACK_WEB);
+        }
       }, 1600);
 
       document.getElementById('open').addEventListener('click', function (e) {
