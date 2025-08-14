@@ -1,44 +1,60 @@
 <!doctype html>
-<html>
+<html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>Open in app</title>
+  <title>Abrir en KarsHub</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin:0; padding:24px; }
+    .box { max-width: 640px; margin: 0 auto; }
+    .btn { display:inline-block; padding:12px 16px; border:1px solid #ddd; border-radius:10px; text-decoration:none; }
+    .hint { color:#666; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Abriendo KarsHub…</h1>
+    <p class="hint">Si no se abre automáticamente, pulsa el botón:</p>
+    <p><a id="open" class="btn" href="#">Abrir en la app</a></p>
+  </div>
+
   <script>
     (function () {
-      // Compute repo base (supports both user site and project site)
-      var segs = location.pathname.split('/').filter(Boolean);
-      var base = segs.length > 0 ? ('/' + segs[0] + '/') : '/';
-      var fallback = base + 'busquedaRapida/'; // e.g., /karshub-link/busquedaRapida/
+      var BASE = "/karshub-redirect/";          // <-- cámbialo si tu repo tiene otro nombre
+      var FALLBACK = BASE + "busquedaRapida/";
+      var HOST = "karshub.com";
 
-      // Support /v/123 or ?id=123
+      var path = location.pathname;
+      if (path.startsWith(BASE)) path = path.slice(BASE.length);
+      var segs = path.split('/').filter(Boolean);
+
       var id = (segs[0] === 'v' && segs[1]) || new URLSearchParams(location.search).get('id');
-      var target = id ? ('karshub://v/' + encodeURIComponent(id)) : 'karshub://busquedaRapida';
+      var target = id
+        ? ('karshub://' + HOST + '/v/' + encodeURIComponent(id))
+        : ('karshub://' + HOST + '/busquedaRapida');
+
+      function openApp() { location.href = target; }
+      setTimeout(openApp, 0);
 
       var fired = false;
-      var timer = setTimeout(function () {
-        if (!fired) location.replace(fallback);
-      }, 1200);
-
-      function cancel() {
-        if (!fired) {
-          fired = True;
-          clearTimeout(timer);
-        }
-      }
-
-      // If the browser loses visibility (likely app opened), cancel fallback
+      function cancel() { if (!fired) { fired = true; clearTimeout(timer); } }
       window.addEventListener('pagehide', cancel);
       window.addEventListener('blur', cancel);
       document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'hidden') cancel();
       });
 
-      // Attempt to open the app
-      location.href = target;
+      var timer = setTimeout(function () {
+        if (!fired) location.replace(FALLBACK);
+      }, 1600);
+
+      document.getElementById('open').addEventListener('click', function (e) {
+        e.preventDefault();
+        openApp();
+      });
     })();
   </script>
-</head>
-<body></body>
+  <noscript>Activa JavaScript para abrir la app.</noscript>
+</body>
 </html>
