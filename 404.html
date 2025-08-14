@@ -4,28 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>Abrir en KarsHub</title>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin:0; padding:24px; }
-    .box { max-width: 640px; margin: 0 auto; }
-    .btn { display:inline-block; padding:12px 16px; border:1px solid #ddd; border-radius:10px; text-decoration:none; }
-    .hint { color:#666; font-size: 14px; }
-  </style>
-</head>
-<body>
-  <div class="box">
-    <h1>Abriendo KarsHub…</h1>
-    <p class="hint">Si no se abre automáticamente, pulsa el botón:</p>
-    <p><a id="open" class="btn" href="#">Abrir en la app</a></p>
-  </div>
-
+  <title></title>
   <script>
     (function () {
       var BASE = "/karshub-redirect/";
-      var FALLBACK_WEB = BASE + "busquedaRapida/";
       var HOST = "karshub.com";
-      var ANDROID_PKG = "com.karshub.karshub";   // <-- cámbialo
-      var IOS_APP_ID  = "6740700578";       // <-- cámbialo
+      var ANDROID_PKG = "com.karshub.karshub";
+      var IOS_APP_ID  = "6740700578";
 
       var ua = navigator.userAgent || "";
       var isAndroid = /Android/i.test(ua);
@@ -34,48 +19,40 @@
       var path = location.pathname;
       if (path.startsWith(BASE)) path = path.slice(BASE.length);
       var segs = path.split('/').filter(Boolean);
-
       var id = (segs[0] === 'v' && segs[1]) || new URLSearchParams(location.search).get('id');
+
       var target = id
         ? ('karshub://' + HOST + '/v/' + encodeURIComponent(id))
-        : ('karshub://' + HOST + '/busquedaRapida');
+        : ('karshub://' + HOST + '/');
 
-      function openApp() { location.href = target; }
-      setTimeout(openApp, 0);
-
-      var fired = false;
-      function cancel(){ if(!fired){ fired = true; clearTimeout(timer); clearTimeout(intentTimer); } }
+      var cancelled = false;
+      function cancel(){ if(!cancelled){ cancelled = true; clearTimeout(tIntent); clearTimeout(tStore); } }
       window.addEventListener('pagehide', cancel);
       window.addEventListener('blur', cancel);
-      document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'hidden') cancel();
-      });
+      document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') cancel(); });
 
-      var intentTimer = setTimeout(function(){
-        if (!fired && isAndroid && id) {
-          var intent = 'intent://karshub.com/v/' + encodeURIComponent(id) +
-                       '#Intent;scheme=karshub;package=' + ANDROID_PKG + ';end';
+      setTimeout(function(){ location.href = target; }, 0);
+
+      var tIntent = setTimeout(function(){
+        if (!cancelled && isAndroid && id) {
+          var intent = 'intent://' + HOST + '/v/' + encodeURIComponent(id)
+                     + '#Intent;scheme=karshub;package=' + ANDROID_PKG + ';end';
           location.href = intent;
         }
-      }, 350);
+      }, 300);
 
-      var timer = setTimeout(function () {
-        if (fired) return;
+      var tStore = setTimeout(function(){
+        if (cancelled) return;
         if (isAndroid) {
           location.replace('https://play.google.com/store/apps/details?id=' + ANDROID_PKG);
         } else if (isIOS) {
           location.replace('https://apps.apple.com/app/id' + IOS_APP_ID);
         } else {
-          location.replace(FALLBACK_WEB);
+          // Desktop/otros: sin acción
         }
       }, 1600);
-
-      document.getElementById('open').addEventListener('click', function (e) {
-        e.preventDefault();
-        openApp();
-      });
     })();
   </script>
-  <noscript>Activa JavaScript para abrir la app.</noscript>
-</body>
+</head>
+<body></body>
 </html>
